@@ -1,47 +1,20 @@
 import { DefaultUi, Player, Youtube } from "@vime/react";
 import { CaretRight, DiscordLogo, FileArrowDown, Image, Lightning } from "phosphor-react";
 
+import { useGetLessonBySlugQuery } from "../graphql/generated";
+
 import '@vime/core/themes/default.css';
-import { gql, useQuery } from "@apollo/client";
-
-const GET_LESSON_BY_SLUG_QUERY = gql`
-    query GetLessonBySlug($slug: String) {
-        lesson(where:{ slug: $slug }) {
-            title
-            videoId
-            description
-            teacher {
-                bio
-                avatarURL
-                name
-            }
-        }
-    }
-`;
-
-interface GetLessonBySlugResponse { 
-    lesson: {
-        title: string;
-        videoId: string;
-        description: string;
-        teacher: {
-            bio: string;
-            avatarURL: string;
-            name: string;
-        }
-    }
-}
 
 interface VideoProps {
     lessonSlug: string;
 }
 
 export default function Video({ lessonSlug }: VideoProps) {
-    const { data } = useQuery<GetLessonBySlugResponse>(GET_LESSON_BY_SLUG_QUERY, {
+    const { data } = useGetLessonBySlugQuery({
         variables: { slug: lessonSlug },
     });
 
-    if (!data) {
+    if (!data || !data.lesson) {
         return (
             <div className="flex-1">
                 <p>Carregando..</p>
@@ -49,7 +22,7 @@ export default function Video({ lessonSlug }: VideoProps) {
         );
     }
 
-    const { lesson: { title, description, teacher, videoId } } = data;
+    const { lesson: { title, description, teacher, videoId }} = data;
 
     return (
         <div className="flex-1">
@@ -71,6 +44,7 @@ export default function Video({ lessonSlug }: VideoProps) {
                             { description }
                         </p>
 
+                        { teacher && (
                         <div className="flex items-center gap-4 mt-6">
                             <img 
                                 className="h-16 w-16 rounded-full border-2 border-blue-500"
@@ -83,6 +57,7 @@ export default function Video({ lessonSlug }: VideoProps) {
                                 <span className="text-gray-200 text-sm block">{ teacher.bio }</span>
                             </div>
                         </div>
+                        )}
                     </div>
 
                     <div className="w-full sm:w-fit flex flex-col gap-4">
